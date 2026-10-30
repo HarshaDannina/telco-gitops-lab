@@ -1,0 +1,36 @@
+# Health checks merged into argocd-cm by scripts/bootstrap.sh (kubectl patch --type merge).
+data:
+  # Report child Application health, so the root app waits for open5gs (wave 0)
+  # to be Healthy before it creates ueransim (wave 1). Without it the UEs start
+  # while UDR is still waiting for MongoDB, get rejected, and stop retrying.
+  resource.customizations.health.argoproj.io_Application: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil and obj.status.health ~= nil then
+      hs.status = obj.status.health.status
+      if obj.status.health.message ~= nil then
+        hs.message = obj.status.health.message
+      end
+    end
+    return hs
+  # The ueransim-gnb chart always renders an HPA that targets a StatefulSet,
+  # but the gNB is a Deployment, so the HPA can never find its target.
+  # Treat that one HPA as Healthy; other HPAs report their AbleToScale condition.
+  resource.customizations.health.autoscaling_HorizontalPodAutoscaler: |
+    hs = {}
+    hs.status = "Healthy"
+    hs.message = ""
+    if obj.metadata.name == "ueransim-gnb" then
+      hs.message = "chart HPA targets a StatefulSet that does not exist; ignored"
+      return hs
+    end
+    if obj.status ~= nil and obj.status.conditions ~= nil then
+      for _, c in ipairs(obj.status.conditions) do
+        if c.type == "AbleToScale" and c.status == "False" then
+          hs.status = "Degraded"
+          hs.message = c.message
+        end
+      end
+    end
+    return hs

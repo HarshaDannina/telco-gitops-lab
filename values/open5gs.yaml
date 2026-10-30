@@ -53,6 +53,14 @@ nssf:
         sst: 1
         sd: "0x111111"
 
+# Headless PFCP service: the SMF resolves the UPF pod IP directly. Through a
+# ClusterIP the UPF answers from its pod IP, the SMF doesn't match that to the
+# peer it knows, and the PFCP association keeps dropping.
+upf:
+  services:
+    pfcp:
+      clusterIP: None
+
 webui:
   ingress:
     enabled: false
