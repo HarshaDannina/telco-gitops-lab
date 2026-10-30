@@ -1,0 +1,30 @@
+# Simulated gNB + 2 UEs (UERANSIM) that register against the core.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ueransim
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: registry-1.docker.io/gradiant
+      chart: ueransim-gnb
+      targetRevision: 0.2.6
+      helm:
+        releaseName: ueransim-gnb
+        valueFiles:
+          - $values/values/ueransim.yaml
+    - repoURL: https://github.com/HarshaDannina/telco-gitops-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: open5gs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,13 @@
+# Registers Gradiant's Helm charts (hosted as OCI artifacts on Docker Hub) with Argo CD.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gradiant-helm-oci
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: gradiant
+  type: helm
+  url: registry-1.docker.io/gradiant
+  enableOCI: "true"

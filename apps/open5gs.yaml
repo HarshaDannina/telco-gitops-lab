@@ -1,0 +1,30 @@
+# 5G SA core (Open5GS). Chart comes from Gradiant's OCI registry, values from this repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: open5gs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: registry-1.docker.io/gradiant
+      chart: open5gs
+      targetRevision: 2.2.6 # confirm with: helm show chart oci://registry-1.docker.io/gradiant/open5gs
+      helm:
+        releaseName: open5gs
+        valueFiles:
+          - $values/values/open5gs.yaml
+    - repoURL: https://github.com/HarshaDannina/telco-gitops-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: open5gs
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

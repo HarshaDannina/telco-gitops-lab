@@ -1,0 +1,14 @@
+# gNB points at the AMF NGAP service from the open5gs release (same namespace).
+amf:
+  hostname: open5gs-amf-ngap
+
+mcc: '999'
+mnc: '70'
+sst: 1
+sd: "0x111111"
+tac: '0001'
+
+ues:
+  enabled: true
+  count: 2
+  initialMSISDN: '0000000001'
