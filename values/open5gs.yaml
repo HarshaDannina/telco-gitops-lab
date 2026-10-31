@@ -66,9 +66,12 @@ webui:
     enabled: false
 
 # Subscribers the UEs in values/ueransim.yaml register as.
+# The chart joins these with "&&" and add_ue_with_slice fails on an existing
+# IMSI, so each one only adds the subscriber if it is missing. That makes the
+# list safe to re-run when a subscriber is added later through Git.
 populate:
   enabled: true
   initCommands:
-    - open5gs-dbctl add_ue_with_slice 999700000000001 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111
-    - open5gs-dbctl add_ue_with_slice 999700000000002 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111
-    - open5gs-dbctl add_ue_with_slice 999700000000003 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111
+    - (open5gs-dbctl showfiltered | grep -q 999700000000001 || open5gs-dbctl add_ue_with_slice 999700000000001 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111)
+    - (open5gs-dbctl showfiltered | grep -q 999700000000002 || open5gs-dbctl add_ue_with_slice 999700000000002 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111)
+    - (open5gs-dbctl showfiltered | grep -q 999700000000003 || open5gs-dbctl add_ue_with_slice 999700000000003 465B5CE8B199B49FAA5F0A2EE238A6BC E8ED289DEBA952E4283B54E88E6183CA internet 1 111111)
