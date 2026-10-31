@@ -1,4 +1,6 @@
-# Simulated gNB + 2 UEs (UERANSIM) that register against the core.
+# Simulated gNB + UEs (UERANSIM) that register against the core.
+# The chart is rendered through kustomize/ueransim, which adds a gNB liveness
+# probe the chart has no values for. Chart version and values stay pinned there.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,17 +10,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
-  sources:
-    - repoURL: registry-1.docker.io/gradiantcharts
-      chart: ueransim-gnb
-      targetRevision: 0.2.6
-      helm:
-        releaseName: ueransim-gnb
-        valueFiles:
-          - $values/values/ueransim.yaml
-    - repoURL: https://github.com/HarshaDannina/telco-gitops-lab.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/HarshaDannina/telco-gitops-lab.git
+    targetRevision: main
+    path: kustomize/ueransim
   destination:
     server: https://kubernetes.default.svc
     namespace: open5gs

@@ -1,0 +1,47 @@
+# Renders the UERANSIM chart (same pinned version and values as before) and
+# patches what the chart has no values for. Needs Argo CD's
+# kustomize.buildOptions "--enable-helm --load-restrictor LoadRestrictionsNone"
+# (set in bootstrap/argocd-cm-patch.yaml) because the values file is outside
+# this directory.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+helmCharts:
+  - name: ueransim-gnb
+    repo: oci://registry-1.docker.io/gradiantcharts
+    version: 0.2.6
+    releaseName: ueransim-gnb
+    namespace: open5gs
+    valuesFile: ../../values/ueransim.yaml
+
+patches:
+  # UERANSIM 3.2.6 never redoes NG Setup after its AMF goes away (for example
+  # after `make drift`). Restart the gNB container when NGAP is down. A
+  # container restart keeps the pod IP, which the UEs resolved at startup.
+  - target:
+      kind: Deployment
+      name: ueransim-gnb
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/livenessProbe
+        value:
+          exec:
+            command:
+              - sh
+              - -c
+              - 'nr-cli "$(nr-cli --dump | head -1)" -e status | grep -q "is-ngap-up: true"'
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+  # The chart always renders an HPA aimed at a StatefulSet; the gNB is a
+  # Deployment, so the HPA can never work and only marks the app Degraded.
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ueransim-gnb
+    patch: |-
+      $patch: delete
+      apiVersion: autoscaling/v1
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: ueransim-gnb

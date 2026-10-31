@@ -15,7 +15,7 @@ kubectl apply -n argocd --server-side --force-conflicts \
 kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
 kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=300s
 
-kubectl -n argocd patch configmap argocd-cm --type merge --patch-file bootstrap/argocd-cm-health.yaml
+kubectl -n argocd patch configmap argocd-cm --type merge --patch-file bootstrap/argocd-cm-patch.yaml
 kubectl apply -f bootstrap/gradiant-helm-oci.yaml
 kubectl apply -f bootstrap/root-app.yaml
 
